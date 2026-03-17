@@ -1,0 +1,180 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: #FDF6EC;
+  --foreground: #3D2304;
+  --card: #FFFFFF;
+  --card-foreground: #3D2304;
+  --popover: #FFFFFF;
+  --popover-foreground: #3D2304;
+  --primary: #7F6000;
+  --primary-foreground: #FDF6EC;
+  --secondary: #F5E6CB;
+  --secondary-foreground: #3D2304;
+  --muted: #F0DFC4;
+  --muted-foreground: #7F6000;
+  --accent: #DEB069;
+  --accent-foreground: #3D2304;
+  --destructive: #C41026;
+  --destructive-foreground: #FFFFFF;
+  --border: #E5D4B5;
+  --input: #E5D4B5;
+  --ring: #DEB069;
+  --chart-1: #7F6000;
+  --chart-2: #DEB069;
+  --chart-3: #C41026;
+  --chart-4: #3D2304;
+  --chart-5: #3D0604;
+  --radius: 0.75rem;
+  --sidebar: #3D2304;
+  --sidebar-foreground: #F5E6CB;
+  --sidebar-primary: #DEB069;
+  --sidebar-primary-foreground: #3D2304;
+  --sidebar-accent: #5A3A0E;
+  --sidebar-accent-foreground: #DEB069;
+  --sidebar-border: #5A3A0E;
+  --sidebar-ring: #DEB069;
+
+  --gold: #DEB069;
+  --gold-dark: #7F6000;
+  --brown-dark: #3D2304;
+  --wine: #3D0604;
+  --red: #C41026;
+  --cream: #FDF6EC;
+  --warm-white: #FFF8EE;
+}
+
+.dark {
+  --background: #1A1008;
+  --foreground: #F5E6CB;
+  --card: #2A1C0E;
+  --card-foreground: #F5E6CB;
+  --popover: #2A1C0E;
+  --popover-foreground: #F5E6CB;
+  --primary: #DEB069;
+  --primary-foreground: #3D2304;
+  --secondary: #3D2304;
+  --secondary-foreground: #F5E6CB;
+  --muted: #3D2304;
+  --muted-foreground: #C4A060;
+  --accent: #7F6000;
+  --accent-foreground: #F5E6CB;
+  --destructive: #C41026;
+  --destructive-foreground: #FFFFFF;
+  --border: #5A3A0E;
+  --input: #5A3A0E;
+  --ring: #DEB069;
+  --chart-1: #DEB069;
+  --chart-2: #7F6000;
+  --chart-3: #C41026;
+  --chart-4: #F5E6CB;
+  --chart-5: #3D0604;
+  --sidebar: #1A1008;
+  --sidebar-foreground: #F5E6CB;
+  --sidebar-primary: #DEB069;
+  --sidebar-primary-foreground: #3D2304;
+  --sidebar-accent: #3D2304;
+  --sidebar-accent-foreground: #DEB069;
+  --sidebar-border: #3D2304;
+  --sidebar-ring: #DEB069;
+}
+
+@theme inline {
+  --font-sans: 'Lora', 'Georgia', serif;
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-gold: var(--gold);
+  --color-gold-dark: var(--gold-dark);
+  --color-brown-dark: var(--brown-dark);
+  --color-wine: var(--wine);
+  --color-red: var(--red);
+  --color-cream: var(--cream);
+  --color-warm-white: var(--warm-white);
+}
+
+/* Hide scrollbar while keeping scroll functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom themed scrollbar styles */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--muted);
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--muted);
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 4px;
+  border: 2px solid var(--muted);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+*::-webkit-scrollbar-corner {
+  background: var(--muted);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
