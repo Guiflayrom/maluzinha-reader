@@ -1,0 +1,4 @@
+onlyBuiltDependencies:
+  - sqlite3
+ignoredBuiltDependencies:
+  - sharp
