@@ -1,14 +1,21 @@
 'use client'
 
-import { Flame, Brain, BookOpen, Target, TrendingUp, ChevronRight, Zap, BatteryLow, BatteryMedium, BatteryFull, Sparkles, BarChart3, Clock, Calendar, History } from 'lucide-react'
-import type { Book, UserStats, MainTab, AppScreen, EnergyLog } from '@/lib/types'
+import { useEffect, useState } from 'react'
+import { Flame, Brain, BookOpen, Target, TrendingUp, ChevronRight, Zap, BatteryLow, BatteryMedium, BatteryFull, Sparkles, BarChart3, Clock, Calendar, History, Settings } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import type { AppSettings, Book, UserStats, MainTab, AppScreen, EnergyLog } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 interface DashboardProps {
   stats: UserStats
+  settings: AppSettings
   books: Book[]
   energyLogs: EnergyLog[]
   onSetEnergy: (energy: UserStats['mentalEnergy']) => void
+  onUpdateReadingPreferences: (weeklyGoal: number, readingMinutesPerPage: number) => void | Promise<void>
   onNavigate: (tab: MainTab) => void
   navigate: (screen: AppScreen) => void
   greetingClicks?: number
@@ -22,11 +29,26 @@ const energyLevels: { value: UserStats['mentalEnergy']; label: string; icon: Rea
   { value: 'peak', label: 'Máximo', icon: Zap, color: 'text-primary' },
 ]
 
-export function Dashboard({ stats, books, energyLogs, onSetEnergy, onNavigate, navigate, greetingClicks = 0, onGreetingClick }: DashboardProps) {
+export function Dashboard({ stats, settings, books, energyLogs, onSetEnergy, onUpdateReadingPreferences, onNavigate, navigate, greetingClicks = 0, onGreetingClick }: DashboardProps) {
+  const [isClient, setIsClient] = useState(false)
+  const [isGoalDialogOpen, setIsGoalDialogOpen] = useState(false)
+  const [weeklyGoalInput, setWeeklyGoalInput] = useState(stats.weeklyGoal.toString())
+  const [readingSpeedInput, setReadingSpeedInput] = useState(settings.readingMinutesPerPage.toString())
   const weeklyProgress = Math.min((stats.weeklyPagesRead / stats.weeklyGoal) * 100, 100)
   const activeBooks = books.filter(b => b.pagesRead > 0 && b.pagesRead < b.totalPages)
   const completedBooks = books.filter(b => b.pagesRead >= b.totalPages)
   const totalQuestions = books.reduce((acc, b) => acc + b.questions.filter(q => !q.resolved).length, 0)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  useEffect(() => {
+    if (isGoalDialogOpen) {
+      setWeeklyGoalInput(stats.weeklyGoal.toString())
+      setReadingSpeedInput(settings.readingMinutesPerPage.toString())
+    }
+  }, [isGoalDialogOpen, settings.readingMinutesPerPage, stats.weeklyGoal])
 
   // Calcular estatisticas de energia
   const energyStats = {
@@ -107,6 +129,10 @@ export function Dashboard({ stats, books, energyLogs, onSetEnergy, onNavigate, n
 
   const suggestedGoal = getSuggestedWeeklyGoal()
   const goalDifference = suggestedGoal - stats.weeklyGoal
+  const parsedWeeklyGoal = parseInt(weeklyGoalInput, 10) || 0
+  const parsedReadingSpeed = Number(readingSpeedInput) || 0
+  const isWeeklyGoalValid = parsedWeeklyGoal > 0
+  const isReadingSpeedValid = parsedReadingSpeed > 0
 
   // Analisar horarios mais produtivos baseado nas sessoes de leitura
   const getProductiveTimeSlots = () => {
@@ -138,10 +164,17 @@ export function Dashboard({ stats, books, energyLogs, onSetEnergy, onNavigate, n
 
   // Get greeting based on timezone
   const getGreeting = () => {
+    if (!isClient) return 'Ola'
     const hour = new Date().getHours()
     if (hour < 12) return 'Bom dia'
     if (hour < 18) return 'Boa tarde'
     return 'Boa noite'
+  }
+
+  const handleSaveWeeklyGoal = () => {
+    if (!isWeeklyGoalValid || !isReadingSpeedValid) return
+    void onUpdateReadingPreferences(parsedWeeklyGoal, parsedReadingSpeed)
+    setIsGoalDialogOpen(false)
   }
 
   return (
@@ -186,7 +219,15 @@ export function Dashboard({ stats, books, energyLogs, onSetEnergy, onNavigate, n
           </div>
 
           {/* Weekly Goal */}
-          <div className="col-span-1 rounded-xl border border-border bg-card p-4 flex flex-col items-center justify-center gap-2">
+          <div className="relative col-span-1 rounded-xl border border-border bg-card p-4 flex flex-col items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsGoalDialogOpen(true)}
+              className="absolute right-3 top-3 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              aria-label="Configurar meta semanal"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
               <Target className="w-6 h-6 text-primary" />
             </div>
@@ -393,8 +434,8 @@ export function Dashboard({ stats, books, energyLogs, onSetEnergy, onNavigate, n
                 const level = energyLevels.find(l => l.value === log.energy)
                 const Icon = level?.icon || Zap
                 const time = new Date(log.timestamp)
-                const timeStr = time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-                const dateStr = time.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+                const timeStr = isClient ? time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''
+                const dateStr = isClient ? time.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : ''
                 return (
                   <div 
                     key={log.id}
@@ -408,7 +449,7 @@ export function Dashboard({ stats, books, energyLogs, onSetEnergy, onNavigate, n
                     {log.pagesReadInSession && log.pagesReadInSession > 0 && (
                       <span className="text-xs text-primary font-medium">+{log.pagesReadInSession} pags</span>
                     )}
-                    <span className="text-[10px] text-muted-foreground">{dateStr} {timeStr}</span>
+                    <span className="text-[10px] text-muted-foreground">{isClient ? `${dateStr} ${timeStr}` : ''}</span>
                   </div>
                 )
               })}
@@ -535,6 +576,92 @@ export function Dashboard({ stats, books, energyLogs, onSetEnergy, onNavigate, n
           </button>
         </div>
       </div>
+
+      <Dialog open={isGoalDialogOpen} onOpenChange={setIsGoalDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Preferencias de leitura</DialogTitle>
+            <DialogDescription>
+              Ajuste sua meta semanal e a velocidade usada nas estimativas do calendario.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="weekly-goal">Paginas por semana</Label>
+              <Input
+                id="weekly-goal"
+                type="number"
+                min="1"
+                value={weeklyGoalInput}
+                onChange={(event) => setWeeklyGoalInput(event.target.value)}
+                placeholder="200"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {[100, 150, 200, 300, 500].map((goal) => (
+                <button
+                  key={goal}
+                  type="button"
+                  onClick={() => setWeeklyGoalInput(goal.toString())}
+                  className={cn(
+                    'rounded-full px-3 py-1.5 text-xs font-medium transition-colors',
+                    parsedWeeklyGoal === goal
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                  )}
+                >
+                  {goal} pags
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="reading-speed">Velocidade de leitura</Label>
+              <div className="flex items-center gap-3">
+                <Input
+                  id="reading-speed"
+                  type="number"
+                  min="0.1"
+                  step="0.1"
+                  value={readingSpeedInput}
+                  onChange={(event) => setReadingSpeedInput(event.target.value)}
+                  placeholder="2"
+                />
+                <span className="text-sm text-muted-foreground whitespace-nowrap">min/pagina</span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {[1, 1.5, 2, 2.5, 3].map((speed) => (
+                <button
+                  key={speed}
+                  type="button"
+                  onClick={() => setReadingSpeedInput(speed.toString())}
+                  className={cn(
+                    'rounded-full px-3 py-1.5 text-xs font-medium transition-colors',
+                    parsedReadingSpeed === speed
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                  )}
+                >
+                  {speed} min/p
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsGoalDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveWeeklyGoal} disabled={!isWeeklyGoalValid || !isReadingSpeedValid}>
+              Salvar preferencias
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

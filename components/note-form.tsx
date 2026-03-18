@@ -17,6 +17,27 @@ interface NoteFormProps {
   onBack: () => void
 }
 
+function blobToDataUrl(blob: Blob) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result)
+        return
+      }
+
+      reject(new Error('Nao foi possivel processar o audio gravado.'))
+    }
+
+    reader.onerror = () => {
+      reject(reader.error ?? new Error('Nao foi possivel processar o audio gravado.'))
+    }
+
+    reader.readAsDataURL(blob)
+  })
+}
+
 export function NoteForm({ book, note, onSave, onBack }: NoteFormProps) {
   const isEditing = !!note
 
@@ -65,10 +86,20 @@ export function NoteForm({ book, note, onSave, onBack }: NoteFormProps) {
 
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
-        const url = URL.createObjectURL(audioBlob)
-        setAudioUrl(url)
-        setAudioDuration(recordingTime)
-        stream.getTracks().forEach(track => track.stop())
+        const duration = recordingTime
+
+        void blobToDataUrl(audioBlob)
+          .then((dataUrl) => {
+            setAudioUrl(dataUrl)
+            setAudioDuration(duration)
+          })
+          .catch((error) => {
+            console.error('Error processing audio:', error)
+            alert('Nao foi possivel processar o audio gravado.')
+          })
+          .finally(() => {
+            stream.getTracks().forEach(track => track.stop())
+          })
       }
 
       mediaRecorder.start()
@@ -106,9 +137,6 @@ export function NoteForm({ book, note, onSave, onBack }: NoteFormProps) {
   }
 
   const deleteAudio = () => {
-    if (audioUrl) {
-      URL.revokeObjectURL(audioUrl)
-    }
     setAudioUrl(undefined)
     setAudioDuration(undefined)
     setIsPlaying(false)

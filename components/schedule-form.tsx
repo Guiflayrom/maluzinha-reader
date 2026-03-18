@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 interface ScheduleFormProps {
   entry?: ScheduleEntry
   books: Book[]
+  readingMinutesPerPage: number
   onSave: (entry: ScheduleEntry) => void
   onBack: () => void
 }
@@ -24,7 +25,7 @@ const TIME_SLOTS = [
   '18:00 - 19:00', '19:00 - 20:00', '20:00 - 21:00', '21:00 - 22:00', '22:00 - 23:00', '23:00 - 00:00'
 ]
 
-export function ScheduleForm({ entry, books, onSave, onBack }: ScheduleFormProps) {
+export function ScheduleForm({ entry, books, readingMinutesPerPage, onSave, onBack }: ScheduleFormProps) {
   const isEditing = !!entry
 
   const [bookId, setBookId] = useState(entry?.bookId || '')
@@ -52,7 +53,7 @@ export function ScheduleForm({ entry, books, onSave, onBack }: ScheduleFormProps
 
   // Calculate estimated time
   const pages = parseInt(pagesToRead) || 0
-  const estimatedMinutes = pages * 2
+  const estimatedMinutes = Math.round(pages * readingMinutesPerPage)
   const hours = Math.floor(estimatedMinutes / 60)
   const mins = estimatedMinutes % 60
 
@@ -169,7 +170,7 @@ export function ScheduleForm({ entry, books, onSave, onBack }: ScheduleFormProps
           </div>
           {pages > 0 && (
             <p className="text-xs text-muted-foreground">
-              Tempo estimado: ~{hours > 0 ? `${hours}h ` : ''}{mins}min (baseado em 2 min/pagina)
+              Tempo estimado: ~{hours > 0 ? `${hours}h ` : ''}{mins}min (baseado em {readingMinutesPerPage} min/pagina)
             </p>
           )}
         </div>

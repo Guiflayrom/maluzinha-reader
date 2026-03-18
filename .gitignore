@@ -6,5 +6,10 @@ __v0_jsx-dev-runtime.ts
 # Common ignores
 node_modules/
 .next/
+.env
 .env*.local
 .DS_Store
+*.tsbuildinfo
+data/*.sqlite
+data/*.sqlite-shm
+data/*.sqlite-wal

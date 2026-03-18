@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { ArrowLeft, Check } from 'lucide-react'
+import { BOOK_COLORS } from '@/lib/app-config'
 import type { Book, Discipline } from '@/lib/types'
-import { BOOK_COLORS } from '@/lib/sample-data'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

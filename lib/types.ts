@@ -143,3 +143,49 @@ export type AppScreen =
 
 // For backwards compatibility
 export type TabKey = MainTab
+
+export interface AchievementMetrics {
+  energyChangeCount: number
+  peakDaysCount: number
+  hasHadLowEnergy: boolean
+}
+
+export interface AppSettings {
+  readingMinutesPerPage: number
+}
+
+export interface AppData {
+  books: Book[]
+  disciplines: Discipline[]
+  stats: UserStats
+  settings: AppSettings
+  schedule: WeeklySchedule
+  achievements: Achievement[]
+  energyLogs: EnergyLog[]
+  greetingClicks: number
+}
+
+export interface StoredAppState extends AppData {
+  pagesAtLastEnergyChange: number
+  achievementMetrics: AchievementMetrics
+}
+
+export type AppMutation =
+  | { type: 'save-book'; book: Book }
+  | { type: 'delete-book'; bookId: string }
+  | { type: 'toggle-book-progress'; bookId: string; bubbleIndex: number }
+  | { type: 'save-note'; bookId: string; note: Note }
+  | { type: 'delete-note'; bookId: string; noteId: string }
+  | { type: 'save-question'; bookId: string; question: Question }
+  | { type: 'delete-question'; bookId: string; questionId: string }
+  | { type: 'toggle-question-resolved'; bookId: string; questionId: string }
+  | { type: 'save-link'; bookId: string; link: IntertextualLink }
+  | { type: 'delete-link'; bookId: string; linkId: string }
+  | { type: 'save-schedule-entry'; entry: ScheduleEntry }
+  | { type: 'delete-schedule-entry'; entryId: string }
+  | { type: 'save-discipline'; discipline: Discipline }
+  | { type: 'delete-discipline'; disciplineId: string }
+  | { type: 'update-weekly-goal'; weeklyGoal: number }
+  | { type: 'update-reading-preferences'; weeklyGoal: number; readingMinutesPerPage: number }
+  | { type: 'set-energy'; energy: UserStats['mentalEnergy'] }
+  | { type: 'register-greeting-click' }

@@ -20,6 +20,7 @@ import {
 interface WeeklyCalendarProps {
   schedule: WeeklySchedule
   books: Book[]
+  readingMinutesPerPage: number
   navigate: (screen: AppScreen) => void
   onDeleteEntry: (entryId: string) => void
 }
@@ -28,7 +29,7 @@ const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
 const DAYS_FULL = ['Domingo', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado']
 const MONTHS = ['Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 
-export function WeeklyCalendar({ schedule, books, navigate, onDeleteEntry }: WeeklyCalendarProps) {
+export function WeeklyCalendar({ schedule, books, readingMinutesPerPage, navigate, onDeleteEntry }: WeeklyCalendarProps) {
   const [selectedDay, setSelectedDay] = useState<number>(new Date().getDay())
   const [viewMode, setViewMode] = useState<'week' | 'day' | 'month'>('week')
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
@@ -39,8 +40,7 @@ export function WeeklyCalendar({ schedule, books, navigate, onDeleteEntry }: Wee
   const dayEntries = schedule.entries.filter(e => e.dayOfWeek === selectedDay)
   const totalPagesDay = dayEntries.reduce((sum, e) => sum + e.pagesToRead, 0)
 
-  // Calculate estimated time based on average reading speed (2 min/page)
-  const estimatedMinutes = totalPagesDay * 2
+  const estimatedMinutes = Math.round(totalPagesDay * readingMinutesPerPage)
   const hours = Math.floor(estimatedMinutes / 60)
   const minutes = estimatedMinutes % 60
 
@@ -136,7 +136,7 @@ export function WeeklyCalendar({ schedule, books, navigate, onDeleteEntry }: Wee
           <span className="text-xs text-muted-foreground">Total da semana:</span>
           <span className="text-sm font-bold text-foreground">{totalWeekPages} paginas</span>
           <span className="text-xs text-muted-foreground ml-auto">
-            ~{Math.floor(totalWeekPages * 2 / 60)}h {(totalWeekPages * 2) % 60}min
+            ~{Math.floor(Math.round(totalWeekPages * readingMinutesPerPage) / 60)}h {Math.round(totalWeekPages * readingMinutesPerPage) % 60}min
           </span>
           <Button size="sm" onClick={() => navigate({ type: 'schedule-form' })}>
             <Plus className="w-4 h-4 mr-1" />
