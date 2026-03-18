@@ -21,8 +21,10 @@ import type {
   UserStats,
 } from '@/lib/types'
 
-const DATA_DIR = path.join(process.cwd(), 'data')
-const DB_PATH = path.join(DATA_DIR, 'lektor.sqlite')
+const DATA_DIR = process.env.SQLITE_DATA_DIR
+  ? path.resolve(process.env.SQLITE_DATA_DIR)
+  : path.join(process.cwd(), 'data')
+const DB_PATH = process.env.SQLITE_DB_PATH ? path.resolve(process.env.SQLITE_DB_PATH) : path.join(DATA_DIR, 'lektor.sqlite')
 const STATE_ID = 'singleton'
 
 type SqliteDatabase = Awaited<ReturnType<typeof open>>

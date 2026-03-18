@@ -39,3 +39,12 @@ pnpm docker:down
 ```
 
 O banco SQLite fica persistido em `./data`.
+
+Em Linux/VPS, prepare o diretório do bind mount antes de subir:
+
+```sh
+mkdir -p ./data
+sudo chown -R 1001:1001 ./data
+sudo chmod 775 ./data
+docker compose up --build -d
+```
