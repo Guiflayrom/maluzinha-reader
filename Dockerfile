@@ -30,7 +30,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
-ENV PORT=3000
+ENV PORT=3010
 ENV SQLITE_DB_PATH=/app/data/lektor.sqlite
 ENV APP_USER=nextjs
 ENV APP_GROUP=nodejs
@@ -48,7 +48,7 @@ COPY docker/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-EXPOSE 3000
+EXPOSE 3010
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 CMD ["node", "-e", "fetch('http://127.0.0.1:3000/api/app-state').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
 
