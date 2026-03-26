@@ -1,21 +1,23 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 
 const loveMessages = [
-  'Oiii amorrr, eu te amo!!!!! :D',
-  'Você é meu livro favorito de todos os tempos!',
-  'Te amar é meu gênero preferido',
-  'Você é o melhor plot twist da minha história',
-  'Meu coração bateu rate de 100% lendo seu amor',
-  'Você é a metáfora mais linda que já vi',
-  'Cada dia contigo é um bestseller',
-  'Você é meu personagem principal favorito',
-  'Te amar é sempre a melhor página para virar',
-  'Você fez meu coração ter um final feliz',
-  'Se o amor fosse um livro, você seria todas as páginas',
-  'Você é meu capítulo favorito da vida',
+  'Oiii amorzinho, eu adoro vucêê :D',
+  'Você deixa qualquer dia mais gostosinho :D',
+  'Seu jeitinho é meu conforto favorito gatinha',
+  'Minha rapézinhaaaaaa <3',
+  'Com você tudo fica mais leve e mais bonito',
+  'Você é meu sorriso mais facil',
+  'Meu coração fica bem calminho com você',
+  'Você é meu cantinho favorito no mundo',
+  'Te olhar sempre deixa meu dia mais fofo',
+  'Com você até o silencio vira carinho',
+  'Você faz meu coração se sentir em casa',
+  'Seu abraço combina direitinho comigo',
+  'Meu lugar preferido continua sendo pertinho de você',
+  'Eu te amoooooooooooooooooo aaaaaaaa lindaaaa'
 ]
 
 const coupleImages = [
@@ -25,6 +27,18 @@ const coupleImages = [
   'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-ggiGB0JAgY6gJUjgFWEAwdhy4HanpK.png',
   'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-9EQ9RqYE5KdAxpjzjTfIY0F0hP9ymH.png',
   'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-CEABaYvvrkMjUJLN2uKkOzy6Gakq3d.png',
+  'https://i.ibb.co/TBP4qmDT/Whats-App-Image-2026-03-26-at-23-45-32-1.jpg',
+  'https://i.ibb.co/tTJpB8F3/Whats-App-Image-2026-03-26-at-23-45-32-3.jpg',
+  'https://i.ibb.co/27skWPKn/Whats-App-Image-2026-03-26-at-23-45-32-2.jpg',
+  'https://i.ibb.co/1JT5PrCN/Whats-App-Image-2026-03-26-at-23-45-32.jpg',
+  'https://i.ibb.co/TxbS5wFL/Whats-App-Image-2026-03-26-at-23-45-33-1.jpg',
+  'https://i.ibb.co/r98xqmH/Whats-App-Image-2026-03-26-at-23-45-33-2.jpg',
+  'https://i.ibb.co/ymV5qHp6/Whats-App-Image-2026-03-26-at-23-45-33.jpg',
+  'https://i.ibb.co/M5J1knS3/Whats-App-Image-2026-03-26-at-23-45-34-1.jpg',
+  'https://i.ibb.co/0RkZFzFv/Whats-App-Image-2026-03-26-at-23-45-34-2.jpg',
+  'https://i.ibb.co/5ps0JCZ/Whats-App-Image-2026-03-26-at-23-45-34-3.jpg',
+  'https://i.ibb.co/qMXJrtpF/Whats-App-Image-2026-03-26-at-23-45-34-4.jpg',
+  'https://i.ibb.co/CZJttbt/Whats-App-Image-2026-03-26-at-23-45-34.jpg'
 ]
 
 interface LoveModalProps {
@@ -56,7 +70,7 @@ export function LoveModal({ isOpen, onClose }: LoveModalProps) {
     }
 
     const timer = setTimeout(() => {
-      setDisplayedText(prev => prev + message[prev.length])
+      setDisplayedText((prev) => prev + message[prev.length])
     }, 50)
 
     return () => clearTimeout(timer)
@@ -66,16 +80,10 @@ export function LoveModal({ isOpen, onClose }: LoveModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop - não fecha o modal */}
-      <div 
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-      />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
 
-      {/* Modal */}
       <div className="relative z-10 max-w-md w-full">
-        {/* Card with romantic styling */}
         <div className="bg-card rounded-2xl border-2 border-accent p-8 shadow-2xl">
-          {/* Close button */}
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 hover:bg-secondary rounded-full transition-colors"
@@ -83,7 +91,6 @@ export function LoveModal({ isOpen, onClose }: LoveModalProps) {
             <X className="w-5 h-5 text-muted-foreground" />
           </button>
 
-          {/* Decorative hearts */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             {Array.from({ length: 8 }).map((_, i) => (
               <div
@@ -105,20 +112,13 @@ export function LoveModal({ isOpen, onClose }: LoveModalProps) {
             ))}
           </div>
 
-          {/* Content */}
           <div className="relative z-10 text-center space-y-4">
-            {/* Couple image */}
             {currentImage && (
               <div className="w-full aspect-square max-w-[200px] mx-auto rounded-xl overflow-hidden border-2 border-accent/50 shadow-lg">
-                <img 
-                  src={currentImage} 
-                  alt="Nós dois" 
-                  className="w-full h-full object-cover"
-                />
+                <img src={currentImage} alt="Nos dois" className="w-full h-full object-cover" />
               </div>
             )}
 
-            {/* Message with typewriter effect */}
             <div className="space-y-2">
               <p className="text-xl font-bold text-foreground min-h-14 flex items-center justify-center">
                 {displayedText}
@@ -126,7 +126,6 @@ export function LoveModal({ isOpen, onClose }: LoveModalProps) {
               </p>
             </div>
 
-            {/* Action button */}
             <button
               onClick={onClose}
               className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-3 rounded-lg transition-colors duration-200 text-lg"
@@ -139,7 +138,8 @@ export function LoveModal({ isOpen, onClose }: LoveModalProps) {
 
       <style jsx>{`
         @keyframes float {
-          0%, 100% {
+          0%,
+          100% {
             transform: translateY(0px) translateX(0px);
             opacity: 0.3;
           }
