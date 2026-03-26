@@ -52,6 +52,10 @@ function getTodayString() {
   return new Date().toISOString().split('T')[0]
 }
 
+function formatDateString(date: Date) {
+  return date.toISOString().split('T')[0]
+}
+
 function getNowTimeSlot() {
   const hour = new Date().getHours()
 
@@ -65,6 +69,34 @@ function getYesterdayString() {
   const now = new Date()
   now.setDate(now.getDate() - 1)
   return now.toISOString().split('T')[0]
+}
+
+function getDateFromWeekStart(weekStart: string, dayOfWeek: number) {
+  const baseDate = new Date(`${weekStart}T00:00:00`)
+  baseDate.setDate(baseDate.getDate() + dayOfWeek)
+  return formatDateString(baseDate)
+}
+
+function getCurrentWeekStart() {
+  const date = new Date()
+  date.setDate(date.getDate() - date.getDay())
+  return formatDateString(date)
+}
+
+function syncCurrentStreak(stats: StoredAppState['stats']) {
+  const today = getTodayString()
+  const yesterday = getYesterdayString()
+
+  if (!stats.lastReadDate) {
+    stats.currentStreak = 0
+    return
+  }
+
+  if (stats.lastReadDate !== today && stats.lastReadDate !== yesterday) {
+    stats.currentStreak = 0
+  }
+
+  stats.longestStreak = Math.max(stats.longestStreak, stats.currentStreak)
 }
 
 function ensureAchievements(state: StoredAppState) {
@@ -192,6 +224,7 @@ function syncState(state: StoredAppState) {
 
   clampStats(state.stats)
   clampSettings(state.settings)
+  syncCurrentStreak(state.stats)
   state.stats.totalBooksCompleted = state.books.filter((book) => book.pagesRead >= book.totalPages).length
   syncAchievements(state)
 }
@@ -295,6 +328,28 @@ function normalizeState(parsedState: Partial<StoredAppState> | null | undefined)
   }
 
   const seed = createSeedState()
+  const baseWeekStart =
+    typeof parsedState?.schedule?.weekStart === 'string' && parsedState.schedule.weekStart
+      ? parsedState.schedule.weekStart
+      : getCurrentWeekStart()
+  const normalizedEntries = Array.isArray(parsedState?.schedule?.entries)
+    ? parsedState.schedule.entries.map((entry) => {
+        const scheduledDate =
+          typeof (entry as Partial<ScheduleEntry>).scheduledDate === 'string' && (entry as Partial<ScheduleEntry>).scheduledDate
+            ? (entry as ScheduleEntry).scheduledDate
+            : typeof (entry as { dayOfWeek?: number }).dayOfWeek === 'number'
+              ? getDateFromWeekStart(baseWeekStart, (entry as unknown as { dayOfWeek: number }).dayOfWeek)
+              : getTodayString()
+
+        return {
+          id: entry.id,
+          bookId: entry.bookId,
+          scheduledDate,
+          timeSlot: entry.timeSlot,
+          pagesToRead: entry.pagesToRead,
+        }
+      })
+    : seed.schedule.entries
 
   const state: StoredAppState = {
     books: Array.isArray(parsedState?.books) ? parsedState.books : seed.books,
@@ -305,7 +360,7 @@ function normalizeState(parsedState: Partial<StoredAppState> | null | undefined)
       ? {
           ...seed.schedule,
           ...parsedState.schedule,
-          entries: Array.isArray(parsedState.schedule.entries) ? parsedState.schedule.entries : seed.schedule.entries,
+          entries: normalizedEntries,
         }
       : seed.schedule,
     achievements: Array.isArray(parsedState?.achievements) ? parsedState.achievements : seed.achievements,

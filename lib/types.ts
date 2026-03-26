@@ -95,7 +95,7 @@ export interface WeeklySchedule {
 export interface ScheduleEntry {
   id: string
   bookId: string
-  dayOfWeek: number // 0=Sun ... 6=Sat
+  scheduledDate: string
   timeSlot: string
   pagesToRead: number
 }

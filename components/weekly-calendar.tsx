@@ -29,26 +29,48 @@ const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
 const DAYS_FULL = ['Domingo', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado']
 const MONTHS = ['Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 
+function formatDateString(date: Date) {
+  const month = `${date.getMonth() + 1}`.padStart(2, '0')
+  const day = `${date.getDate()}`.padStart(2, '0')
+  return `${date.getFullYear()}-${month}-${day}`
+}
+
+function parseDateString(value: string) {
+  return new Date(`${value}T00:00:00`)
+}
+
+function getStartOfWeek(date: Date) {
+  const result = new Date(date)
+  result.setDate(result.getDate() - result.getDay())
+  result.setHours(0, 0, 0, 0)
+  return result
+}
+
 export function WeeklyCalendar({ schedule, books, readingMinutesPerPage, navigate, onDeleteEntry }: WeeklyCalendarProps) {
-  const [selectedDay, setSelectedDay] = useState<number>(new Date().getDay())
+  const today = new Date()
+  const [selectedDate, setSelectedDate] = useState<Date>(today)
   const [viewMode, setViewMode] = useState<'week' | 'day' | 'month'>('week')
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth())
+  const [currentYear, setCurrentYear] = useState(today.getFullYear())
 
   const getBook = (bookId: string) => books.find(b => b.id === bookId)
+  const selectedDateString = formatDateString(selectedDate)
 
-  const dayEntries = schedule.entries.filter(e => e.dayOfWeek === selectedDay)
+  const dayEntries = schedule.entries.filter(e => e.scheduledDate === selectedDateString)
   const totalPagesDay = dayEntries.reduce((sum, e) => sum + e.pagesToRead, 0)
 
   const estimatedMinutes = Math.round(totalPagesDay * readingMinutesPerPage)
   const hours = Math.floor(estimatedMinutes / 60)
   const minutes = estimatedMinutes % 60
 
-  // Weekly summary
+  const weekStart = getStartOfWeek(selectedDate)
   const weekDaySummary = DAYS.map((_, i) => {
-    const entries = schedule.entries.filter(e => e.dayOfWeek === i)
+    const date = new Date(weekStart)
+    date.setDate(weekStart.getDate() + i)
+    const dateString = formatDateString(date)
+    const entries = schedule.entries.filter(e => e.scheduledDate === dateString)
     const totalPages = entries.reduce((sum, e) => sum + e.pagesToRead, 0)
-    return { day: i, entries, totalPages }
+    return { day: i, date, dateString, entries, totalPages }
   })
 
   const totalWeekPages = weekDaySummary.reduce((sum, d) => sum + d.totalPages, 0)
@@ -78,12 +100,12 @@ export function WeeklyCalendar({ schedule, books, readingMinutesPerPage, navigat
     }
   }
 
-  // Get entries for a specific date (for monthly view)
   const getEntriesForDate = (dayNum: number) => {
-    const date = new Date(currentYear, currentMonth, dayNum)
-    const dayOfWeek = date.getDay()
-    return schedule.entries.filter(e => e.dayOfWeek === dayOfWeek)
+    const dateString = formatDateString(new Date(currentYear, currentMonth, dayNum))
+    return schedule.entries.filter(e => e.scheduledDate === dateString)
   }
+
+  const weekRangeLabel = `${weekDaySummary[0]?.date.getDate()} a ${weekDaySummary[6]?.date.getDate()} de ${MONTHS[weekDaySummary[0]?.date.getMonth() ?? currentMonth].toLowerCase()}`
 
   return (
     <div className="flex flex-col min-h-full">
@@ -92,7 +114,7 @@ export function WeeklyCalendar({ schedule, books, readingMinutesPerPage, navigat
           <div>
             <h2 className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">Calendario</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              {viewMode === 'month' ? `${MONTHS[currentMonth]} ${currentYear}` : 'Semana de 2 a 8 de marco'}
+              {viewMode === 'month' ? `${MONTHS[currentMonth]} ${currentYear}` : `Semana de ${weekRangeLabel}`}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -191,7 +213,7 @@ export function WeeklyCalendar({ schedule, books, readingMinutesPerPage, navigat
                     key={dayNum}
                     onClick={() => {
                       const date = new Date(currentYear, currentMonth, dayNum)
-                      setSelectedDay(date.getDay())
+                      setSelectedDate(date)
                       setViewMode('day')
                     }}
                     className={cn(
@@ -238,17 +260,17 @@ export function WeeklyCalendar({ schedule, books, readingMinutesPerPage, navigat
         <div className="px-4 lg:px-8 py-2">
           <div className="grid grid-cols-7 gap-1.5">
             {weekDaySummary.map((day, i) => {
-              const isSelected = selectedDay === i
-              const isToday = new Date().getDay() === i
+              const isSelectedDay = selectedDateString === day.dateString
+              const isToday = formatDateString(new Date()) === day.dateString
               const hasEntries = day.entries.length > 0
               
               return (
                 <button
                   key={i}
-                  onClick={() => { setSelectedDay(i); setViewMode('day') }}
+                  onClick={() => { setSelectedDate(day.date); setViewMode('day') }}
                   className={cn(
                     'flex flex-col items-center gap-1 py-3 px-1 rounded-xl transition-all duration-200',
-                    isSelected
+                    isSelectedDay
                       ? 'bg-primary text-primary-foreground shadow-md'
                       : isToday
                         ? 'bg-accent/20 text-foreground'
@@ -257,15 +279,15 @@ export function WeeklyCalendar({ schedule, books, readingMinutesPerPage, navigat
                 >
                   <span className={cn(
                     'text-[10px] font-medium',
-                    isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                    isSelectedDay ? 'text-primary-foreground/70' : 'text-muted-foreground'
                   )}>
                     {DAYS[i]}
                   </span>
                   <span className={cn(
                     'text-sm font-bold',
-                    isSelected ? 'text-primary-foreground' : 'text-foreground'
+                    isSelectedDay ? 'text-primary-foreground' : 'text-foreground'
                   )}>
-                    {2 + i}
+                    {day.date.getDate()}
                   </span>
                   {hasEntries && (
                     <div className={cn('flex gap-0.5 mt-0.5')}>
@@ -274,7 +296,7 @@ export function WeeklyCalendar({ schedule, books, readingMinutesPerPage, navigat
                           key={j} 
                           className={cn(
                             'w-1.5 h-1.5 rounded-full',
-                            isSelected ? 'bg-primary-foreground/60' : 'bg-accent'
+                            isSelectedDay ? 'bg-primary-foreground/60' : 'bg-accent'
                           )} 
                         />
                       ))}
@@ -293,14 +315,24 @@ export function WeeklyCalendar({ schedule, books, readingMinutesPerPage, navigat
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <button 
-                onClick={() => setSelectedDay(prev => Math.max(0, prev - 1))}
+                onClick={() => {
+                  const nextDate = new Date(selectedDate)
+                  nextDate.setDate(nextDate.getDate() - 1)
+                  setSelectedDate(nextDate)
+                }}
                 className="p-1.5 rounded-lg hover:bg-secondary"
               >
                 <ChevronLeft className="w-4 h-4 text-muted-foreground" />
               </button>
-              <h3 className="text-sm font-semibold text-foreground">{DAYS_FULL[selectedDay]}</h3>
+              <h3 className="text-sm font-semibold text-foreground">
+                {new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }).format(selectedDate)}
+              </h3>
               <button 
-                onClick={() => setSelectedDay(prev => Math.min(6, prev + 1))}
+                onClick={() => {
+                  const nextDate = new Date(selectedDate)
+                  nextDate.setDate(nextDate.getDate() + 1)
+                  setSelectedDate(nextDate)
+                }}
                 className="p-1.5 rounded-lg hover:bg-secondary"
               >
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
@@ -416,11 +448,13 @@ export function WeeklyCalendar({ schedule, books, readingMinutesPerPage, navigat
           <div className="flex flex-col gap-3">
             {weekDaySummary.filter(d => d.entries.length > 0).map(day => (
               <div 
-                key={day.day}
+                key={day.dateString}
                 className="rounded-xl border border-border bg-card p-4"
               >
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-foreground">{DAYS_FULL[day.day]}</h4>
+                  <h4 className="text-sm font-semibold text-foreground">
+                    {DAYS_FULL[day.day]} · {day.date.getDate()}/{`${day.date.getMonth() + 1}`.padStart(2, '0')}
+                  </h4>
                   <span className="text-xs text-muted-foreground">{day.totalPages} paginas</span>
                 </div>
                 <div className="flex flex-col gap-2">

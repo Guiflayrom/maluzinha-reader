@@ -17,19 +17,32 @@ interface ScheduleFormProps {
   onBack: () => void
 }
 
-const DAYS_FULL = ['Domingo', 'Segunda-feira', 'Terca-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sabado']
-
 const TIME_SLOTS = [
   '06:00 - 07:00', '07:00 - 08:00', '08:00 - 09:00', '09:00 - 10:00', '10:00 - 11:00', '11:00 - 12:00',
   '12:00 - 13:00', '13:00 - 14:00', '14:00 - 15:00', '15:00 - 16:00', '16:00 - 17:00', '17:00 - 18:00',
   '18:00 - 19:00', '19:00 - 20:00', '20:00 - 21:00', '21:00 - 22:00', '22:00 - 23:00', '23:00 - 00:00'
 ]
 
+function getTodayString() {
+  const date = new Date()
+  const month = `${date.getMonth() + 1}`.padStart(2, '0')
+  const day = `${date.getDate()}`.padStart(2, '0')
+  return `${date.getFullYear()}-${month}-${day}`
+}
+
+function formatDateSummary(value: string) {
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(`${value}T00:00:00`))
+}
+
 export function ScheduleForm({ entry, books, readingMinutesPerPage, onSave, onBack }: ScheduleFormProps) {
   const isEditing = !!entry
 
   const [bookId, setBookId] = useState(entry?.bookId || '')
-  const [dayOfWeek, setDayOfWeek] = useState(entry?.dayOfWeek?.toString() || '')
+  const [scheduledDate, setScheduledDate] = useState(entry?.scheduledDate || getTodayString())
   const [timeSlot, setTimeSlot] = useState(entry?.timeSlot || '')
   const [pagesToRead, setPagesToRead] = useState(entry?.pagesToRead?.toString() || '')
 
@@ -41,7 +54,7 @@ export function ScheduleForm({ entry, books, readingMinutesPerPage, onSave, onBa
     const newEntry: ScheduleEntry = {
       id: entry?.id || `se-${Date.now()}`,
       bookId,
-      dayOfWeek: parseInt(dayOfWeek),
+      scheduledDate,
       timeSlot,
       pagesToRead: parseInt(pagesToRead) || 0,
     }
@@ -49,7 +62,7 @@ export function ScheduleForm({ entry, books, readingMinutesPerPage, onSave, onBa
     onSave(newEntry)
   }
 
-  const isValid = bookId && dayOfWeek !== '' && timeSlot && parseInt(pagesToRead) > 0
+  const isValid = bookId && scheduledDate && timeSlot && parseInt(pagesToRead) > 0
 
   // Calculate estimated time
   const pages = parseInt(pagesToRead) || 0
@@ -115,26 +128,16 @@ export function ScheduleForm({ entry, books, readingMinutesPerPage, onSave, onBa
           </div>
         )}
 
-        {/* Day of week */}
+        {/* Scheduled date */}
         <div className="flex flex-col gap-2">
-          <Label>Dia da semana *</Label>
-          <div className="grid grid-cols-7 gap-1.5">
-            {DAYS_FULL.map((day, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setDayOfWeek(i.toString())}
-                className={cn(
-                  'p-2 rounded-lg border text-center transition-all',
-                  dayOfWeek === i.toString()
-                    ? 'border-primary bg-primary/5 text-foreground'
-                    : 'border-border bg-card text-muted-foreground hover:border-primary/30'
-                )}
-              >
-                <span className="text-[10px] font-medium">{day.substring(0, 3)}</span>
-              </button>
-            ))}
-          </div>
+          <Label htmlFor="scheduled-date">Data da leitura *</Label>
+          <Input
+            id="scheduled-date"
+            type="date"
+            value={scheduledDate}
+            onChange={(event) => setScheduledDate(event.target.value)}
+            className="bg-card w-full sm:w-64"
+          />
         </div>
 
         {/* Time slot */}
@@ -220,8 +223,8 @@ export function ScheduleForm({ entry, books, readingMinutesPerPage, onSave, onBa
             <p className="text-sm font-medium text-foreground mb-2">Resumo do agendamento</p>
             <p className="text-sm text-muted-foreground">
               <span className="font-medium text-foreground">{selectedBook.title}</span>
-              {' '}na{' '}
-              <span className="font-medium text-foreground">{DAYS_FULL[parseInt(dayOfWeek)]}</span>
+              {' '}em{' '}
+              <span className="font-medium text-foreground">{formatDateSummary(scheduledDate)}</span>
               {' '}das{' '}
               <span className="font-medium text-foreground">{timeSlot}</span>
               {' '}- {' '}
