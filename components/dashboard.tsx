@@ -164,7 +164,7 @@ export function Dashboard({ stats, settings, books, energyLogs, onSetEnergy, onU
 
   // Get greeting based on timezone
   const getGreeting = () => {
-    if (!isClient) return 'Ola'
+    if (!isClient) return 'Olá'
     const hour = new Date().getHours()
     if (hour < 12) return 'Bom dia'
     if (hour < 18) return 'Boa tarde'
@@ -186,7 +186,7 @@ export function Dashboard({ stats, settings, books, energyLogs, onSetEnergy, onU
           className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight text-balance cursor-pointer hover:text-primary/80 transition-colors active:scale-95 duration-150"
           title={greetingClicks > 0 ? `${greetingClicks}/10 cliques` : 'Clique aqui!'}
         >
-          {getGreeting()}, leitor!
+          {getGreeting()}, leitora!
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
           Vamos continuar de onde paramos.
