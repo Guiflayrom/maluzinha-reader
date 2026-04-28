@@ -18,6 +18,13 @@ const loveMessages = [
   'Seu abraço combina direitinho comigo.',
   'Meu lugar preferido continua sendo pertinho de você.',
   'Eu te amoooooooooooooooooo, aaaaaaaa, lindaaaa!',
+  'Minha esquilazinhaaaa :)))',
+  'Minha esquilazinhaaaa :)))',
+  'Minha esquilazinhaaaa :)))',
+  'Minha esquilazinhaaaa :)))',
+  'Minha esquilazinhaaaa :)))',
+  'Minha esquilazinhaaaa :)))',
+  'Minha esquilazinhaaaa :)))',
 ];
 
 const coupleImages = [

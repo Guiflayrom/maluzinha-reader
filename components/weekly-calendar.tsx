@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Clock, BookOpen, ChevronLeft, ChevronRight, Plus, Trash2, Calendar as CalendarIcon } from 'lucide-react'
 import type { Book, WeeklySchedule, AppScreen } from '@/lib/types'
+import { formatLocalDate, getStartOfWeek } from '@/lib/date'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,21 +30,8 @@ const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
 const DAYS_FULL = ['Domingo', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado']
 const MONTHS = ['Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 
-function formatDateString(date: Date) {
-  const month = `${date.getMonth() + 1}`.padStart(2, '0')
-  const day = `${date.getDate()}`.padStart(2, '0')
-  return `${date.getFullYear()}-${month}-${day}`
-}
-
 function parseDateString(value: string) {
   return new Date(`${value}T00:00:00`)
-}
-
-function getStartOfWeek(date: Date) {
-  const result = new Date(date)
-  result.setDate(result.getDate() - result.getDay())
-  result.setHours(0, 0, 0, 0)
-  return result
 }
 
 export function WeeklyCalendar({ schedule, books, readingMinutesPerPage, navigate, onDeleteEntry }: WeeklyCalendarProps) {
@@ -54,7 +42,7 @@ export function WeeklyCalendar({ schedule, books, readingMinutesPerPage, navigat
   const [currentYear, setCurrentYear] = useState(today.getFullYear())
 
   const getBook = (bookId: string) => books.find(b => b.id === bookId)
-  const selectedDateString = formatDateString(selectedDate)
+  const selectedDateString = formatLocalDate(selectedDate)
 
   const dayEntries = schedule.entries.filter(e => e.scheduledDate === selectedDateString)
   const totalPagesDay = dayEntries.reduce((sum, e) => sum + e.pagesToRead, 0)
@@ -67,7 +55,7 @@ export function WeeklyCalendar({ schedule, books, readingMinutesPerPage, navigat
   const weekDaySummary = DAYS.map((_, i) => {
     const date = new Date(weekStart)
     date.setDate(weekStart.getDate() + i)
-    const dateString = formatDateString(date)
+    const dateString = formatLocalDate(date)
     const entries = schedule.entries.filter(e => e.scheduledDate === dateString)
     const totalPages = entries.reduce((sum, e) => sum + e.pagesToRead, 0)
     return { day: i, date, dateString, entries, totalPages }
@@ -101,7 +89,7 @@ export function WeeklyCalendar({ schedule, books, readingMinutesPerPage, navigat
   }
 
   const getEntriesForDate = (dayNum: number) => {
-    const dateString = formatDateString(new Date(currentYear, currentMonth, dayNum))
+    const dateString = formatLocalDate(new Date(currentYear, currentMonth, dayNum))
     return schedule.entries.filter(e => e.scheduledDate === dateString)
   }
 
@@ -261,7 +249,7 @@ export function WeeklyCalendar({ schedule, books, readingMinutesPerPage, navigat
           <div className="grid grid-cols-7 gap-1.5">
             {weekDaySummary.map((day, i) => {
               const isSelectedDay = selectedDateString === day.dateString
-              const isToday = formatDateString(new Date()) === day.dateString
+              const isToday = formatLocalDate(new Date()) === day.dateString
               const hasEntries = day.entries.length > 0
               
               return (

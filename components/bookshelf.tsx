@@ -17,12 +17,25 @@ type FilterMode = 'all' | 'academic' | 'personal' | 'completed'
 
 export function Bookshelf({ books, disciplines, onToggleBubble, navigate }: BookshelfProps) {
   const [filter, setFilter] = useState<FilterMode>('all')
+  const [disciplineFilter, setDisciplineFilter] = useState('all')
+
+  const availableDisciplines = disciplines
+    .filter(discipline => discipline.professor && books.some(book => book.discipline === discipline.id))
+    .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
 
   const filteredBooks = books.filter(book => {
-    if (filter === 'academic') return book.isAcademic
-    if (filter === 'personal') return !book.isAcademic
-    if (filter === 'completed') return book.pagesRead >= book.totalPages
-    return true
+    const matchesPrimaryFilter =
+      filter === 'academic'
+        ? book.isAcademic
+        : filter === 'personal'
+          ? !book.isAcademic
+          : filter === 'completed'
+            ? book.pagesRead >= book.totalPages
+            : true
+
+    const matchesDiscipline = disciplineFilter === 'all' || book.discipline === disciplineFilter
+
+    return matchesPrimaryFilter && matchesDiscipline
   })
 
   const getDisciplineName = (book: Book) => {
@@ -31,6 +44,23 @@ export function Bookshelf({ books, disciplines, onToggleBubble, navigate }: Book
   }
 
   const depthColors = { none: 'bg-border', shallow: 'bg-accent/50', medium: 'bg-accent', deep: 'bg-primary' }
+  const hasActiveFilters = filter !== 'all' || disciplineFilter !== 'all'
+
+  const handlePrimaryFilterChange = (nextFilter: FilterMode) => {
+    setFilter(nextFilter)
+
+    if (nextFilter === 'personal') {
+      setDisciplineFilter('all')
+    }
+  }
+
+  const handleDisciplineFilterChange = (nextDisciplineId: string) => {
+    setDisciplineFilter(nextDisciplineId)
+
+    if (nextDisciplineId !== 'all' && filter === 'personal') {
+      setFilter('academic')
+    }
+  }
 
   return (
     <div className="flex flex-col min-h-full">
@@ -38,7 +68,9 @@ export function Bookshelf({ books, disciplines, onToggleBubble, navigate }: Book
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">Minha Estante</h2>
-            <p className="text-sm text-muted-foreground mt-1">{books.length} livros no total</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {hasActiveFilters ? `${filteredBooks.length} de ${books.length} livros` : `${books.length} livros no total`}
+            </p>
           </div>
           <Button onClick={() => navigate({ type: 'book-form' })} size="sm">
             <Plus className="w-4 h-4 mr-1" />
@@ -54,7 +86,7 @@ export function Bookshelf({ books, disciplines, onToggleBubble, navigate }: Book
           {(['all', 'academic', 'personal', 'completed'] as FilterMode[]).map(f => (
             <button
               key={f}
-              onClick={() => setFilter(f)}
+              onClick={() => handlePrimaryFilterChange(f)}
               className={cn(
                 'px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all',
                 filter === f
@@ -69,6 +101,37 @@ export function Bookshelf({ books, disciplines, onToggleBubble, navigate }: Book
             </button>
           ))}
         </div>
+
+        {availableDisciplines.length > 0 && (
+          <div className="mt-2 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">Matérias:</span>
+            <button
+              onClick={() => handleDisciplineFilterChange('all')}
+              className={cn(
+                'px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all',
+                disciplineFilter === 'all'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+              )}
+            >
+              Todas
+            </button>
+            {availableDisciplines.map(discipline => (
+              <button
+                key={discipline.id}
+                onClick={() => handleDisciplineFilterChange(discipline.id)}
+                className={cn(
+                  'px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all',
+                  disciplineFilter === discipline.id
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                )}
+              >
+                {discipline.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Books List */}

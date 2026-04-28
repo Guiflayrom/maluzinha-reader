@@ -1,4 +1,5 @@
 import type { Achievement, AppSettings, UserStats, WeeklySchedule } from '@/lib/types'
+import { getWeekRange } from '@/lib/date'
 
 export const BOOK_COLORS = [
   '#8B4513', '#A0522D', '#6B3410', '#4A2808', '#D4A574',
@@ -25,17 +26,10 @@ export function createEmptyStats(): UserStats {
   }
 }
 
-function getWeekStart() {
-  const date = new Date()
-  const diffToMonday = (date.getDay() + 6) % 7
-  date.setDate(date.getDate() - diffToMonday)
-  return date.toISOString().split('T')[0]
-}
-
 export function createEmptySchedule(): WeeklySchedule {
   return {
     id: 'weekly-schedule',
-    weekStart: getWeekStart(),
+    weekStart: getWeekRange().start,
     entries: [],
   }
 }

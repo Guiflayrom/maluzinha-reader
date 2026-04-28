@@ -9,6 +9,7 @@ import {
   createEmptyStats,
   PERSONAL_DISCIPLINE_ID,
 } from '@/lib/app-config'
+import { formatLocalDate, getTodayString, getWeekRange, getYesterdayString } from '@/lib/date'
 import { checkAchievements } from '@/lib/achievements-checker'
 import type {
   AppData,
@@ -48,14 +49,6 @@ function getDefaultPersonalDiscipline() {
   }
 }
 
-function getTodayString() {
-  return new Date().toISOString().split('T')[0]
-}
-
-function formatDateString(date: Date) {
-  return date.toISOString().split('T')[0]
-}
-
 function getNowTimeSlot() {
   const hour = new Date().getHours()
 
@@ -64,23 +57,10 @@ function getNowTimeSlot() {
 
   return 'noite'
 }
-
-function getYesterdayString() {
-  const now = new Date()
-  now.setDate(now.getDate() - 1)
-  return now.toISOString().split('T')[0]
-}
-
 function getDateFromWeekStart(weekStart: string, dayOfWeek: number) {
   const baseDate = new Date(`${weekStart}T00:00:00`)
   baseDate.setDate(baseDate.getDate() + dayOfWeek)
-  return formatDateString(baseDate)
-}
-
-function getCurrentWeekStart() {
-  const date = new Date()
-  date.setDate(date.getDate() - date.getDay())
-  return formatDateString(date)
+  return formatLocalDate(baseDate)
 }
 
 function syncCurrentStreak(stats: StoredAppState['stats']) {
@@ -222,6 +202,11 @@ function syncState(state: StoredAppState) {
     updateBookDisciplineMembership(state, book)
   })
 
+  state.schedule = {
+    ...state.schedule,
+    weekStart: getWeekRange().start,
+  }
+  syncWeeklyPagesRead(state)
   clampStats(state.stats)
   clampSettings(state.settings)
   syncCurrentStreak(state.stats)
@@ -331,7 +316,7 @@ function normalizeState(parsedState: Partial<StoredAppState> | null | undefined)
   const baseWeekStart =
     typeof parsedState?.schedule?.weekStart === 'string' && parsedState.schedule.weekStart
       ? parsedState.schedule.weekStart
-      : getCurrentWeekStart()
+      : getWeekRange().start
   const normalizedEntries = Array.isArray(parsedState?.schedule?.entries)
     ? parsedState.schedule.entries.map((entry) => {
         const scheduledDate =
@@ -415,7 +400,6 @@ function updateReadingStats(state: StoredAppState, pageDelta: number) {
   }
 
   state.stats.totalPagesRead += pageDelta
-  state.stats.weeklyPagesRead += pageDelta
 
   if (pageDelta <= 0) {
     clampStats(state.stats)
@@ -432,6 +416,22 @@ function updateReadingStats(state: StoredAppState, pageDelta: number) {
   }
 
   clampStats(state.stats)
+}
+
+function syncWeeklyPagesRead(state: StoredAppState) {
+  const currentWeek = getWeekRange()
+
+  state.stats.weeklyPagesRead = state.books.reduce((totalPages, book) => {
+    const weeklyPages = book.readingSessions.reduce((bookPages, session) => {
+      if (session.date < currentWeek.start || session.date > currentWeek.end) {
+        return bookPages
+      }
+
+      return bookPages + session.pagesRead
+    }, 0)
+
+    return totalPages + weeklyPages
+  }, 0)
 }
 
 function saveBook(state: StoredAppState, book: Book) {
