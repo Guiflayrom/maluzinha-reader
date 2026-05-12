@@ -63,7 +63,28 @@ function getDateFromWeekStart(weekStart: string, dayOfWeek: number) {
   return formatLocalDate(baseDate)
 }
 
-function syncCurrentStreak(stats: StoredAppState['stats']) {
+function getNextDateString(dateString: string) {
+  const date = new Date(`${dateString}T00:00:00`)
+  date.setDate(date.getDate() + 1)
+  return formatLocalDate(date)
+}
+
+function getReadingDates(books: Book[]) {
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/
+  const dates = new Set<string>()
+
+  books.forEach((book) => {
+    book.readingSessions.forEach((session) => {
+      if (session.pagesRead > 0 && datePattern.test(session.date)) {
+        dates.add(session.date)
+      }
+    })
+  })
+
+  return [...dates].sort()
+}
+
+function syncCurrentStreakFromLastReadDate(stats: StoredAppState['stats']) {
   const today = getTodayString()
   const yesterday = getYesterdayString()
 
@@ -77,6 +98,35 @@ function syncCurrentStreak(stats: StoredAppState['stats']) {
   }
 
   stats.longestStreak = Math.max(stats.longestStreak, stats.currentStreak)
+}
+
+function syncReadingStreaks(state: StoredAppState) {
+  const readingDates = getReadingDates(state.books)
+
+  if (readingDates.length === 0) {
+    syncCurrentStreakFromLastReadDate(state.stats)
+    return
+  }
+
+  let longestStreak = 0
+  let streakEndingAtLastDate = 0
+  let currentRun = 0
+  let previousDate: string | undefined
+
+  readingDates.forEach((date) => {
+    currentRun = previousDate && getNextDateString(previousDate) === date ? currentRun + 1 : 1
+    longestStreak = Math.max(longestStreak, currentRun)
+    streakEndingAtLastDate = currentRun
+    previousDate = date
+  })
+
+  const today = getTodayString()
+  const yesterday = getYesterdayString()
+  const lastReadDate = readingDates[readingDates.length - 1] ?? ''
+
+  state.stats.lastReadDate = lastReadDate
+  state.stats.currentStreak = lastReadDate === today || lastReadDate === yesterday ? streakEndingAtLastDate : 0
+  state.stats.longestStreak = Math.max(state.stats.longestStreak, longestStreak)
 }
 
 function ensureAchievements(state: StoredAppState) {
@@ -209,7 +259,7 @@ function syncState(state: StoredAppState) {
   syncWeeklyPagesRead(state)
   clampStats(state.stats)
   clampSettings(state.settings)
-  syncCurrentStreak(state.stats)
+  syncReadingStreaks(state)
   state.stats.totalBooksCompleted = state.books.filter((book) => book.pagesRead >= book.totalPages).length
   syncAchievements(state)
 }
